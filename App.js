@@ -11,7 +11,9 @@ import {Platform, StyleSheet, Text, View, TextInput, Button } from 'react-native
 
 import ListItem from './src/components/ListItem/ListItem'
 import InputItem from './src/components/InpuItem/InputItem'
-import List from './src/components/List/List'
+import List from './src/components/List/List';
+import PlaceDetail  from './src/components/PlaceDetail/PlaceDetail';
+
 
 const instructions = Platform.select({
   ios: 'Press Cmd+R to reload,\n' + 'Cmd+D or shake for dev menu',
@@ -25,12 +27,13 @@ export default class App extends Component {
 
   state = {
     placeName : '',
-    places : []
+    places : [],
+    selectedPlace: null
+
   }
 
 
   placeNameChangedHandler = val => {
-    console.log(val)
      this.setState({
        placeName: val 
      });
@@ -42,27 +45,72 @@ export default class App extends Component {
     }
     this.setState(prevState => {
       return {
-        places: prevState.places.concat(prevState.placeName),
+        places: prevState.places.concat({
+          key: Math.random(),
+          name: prevState.placeName,
+          image: {
+            uri: "https://us-east.manta.joyent.com/condenast/public/cnt-services/production/2016/01/14/5698079f78d099fc122488c6_Trunk-Bay-St-John-cr-alamy.jpg"
+          }
+        }),
         placeName : ""
       };
     });
   };
 
-  render() {
+  placeDeleteHandler = index => {
+    this.setState(prevState => {
+      return {
+        places: prevState.places.filter(place => {
+          return place.key !== index;
+        })
+      }
+    });
+  }
 
-    const  placesOutput = this.state.places.map((place, index) => (
-      <ListItem key={index}  placeName={ place }/>
-    ));
+  placeSelectedHandler = key => {
+    this.setState(prevState => {
+      return {
+        selectedPlace: prevState.places.find((place) => {
+          return place.key === key;
+        })
+      }
+    })
+  };
+
+  placeDeletedHandler = () => {
+    this.setState(prevState => {
+      return {
+        places: prevState.places.filter(place => {
+          return place.key !== prevState.selectedPlace.key;
+        }),
+        selectedPlace: null
+      }
+    });
+  }
+
+  modalClosedHandler= () => {
+    this.setState({
+      selectedPlace: null
+    });
+  }
+
+  render() {
 
     return (
       <View style={styles.container}>
+        <PlaceDetail
+          selectedPlace ={this.state.selectedPlace}
+          onItemDeleted={this.placeDeletedHandler}
+          onModalClosed={this.modalClosedHandler}
+        />
         <InputItem 
           placeName={this.state.placeName} 
           placeNameChangedHandler={this.placeNameChangedHandler}
           placeSubmitHandler={this.placeSubmitHandler}
         />
         <List 
-          placesOutput={placesOutput}
+          places={this.state.places} 
+          onItemSelected={this.placeSelectedHandler}
         />
       </View>
     );
