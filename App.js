@@ -7,12 +7,14 @@
  */
 
 import React, {Component} from 'react';
-import {Platform, StyleSheet, Text, View, TextInput, Button } from 'react-native'; 
+import {Platform, StyleSheet, View } from 'react-native'; 
+import { connect } from 'react-redux'; 
 
-import ListItem from './src/components/ListItem/ListItem'
-import InputItem from './src/components/InpuItem/InputItem'
+import PlaceInput from './src/components/PlaceInput/PlaceInput'
 import List from './src/components/List/List';
 import PlaceDetail  from './src/components/PlaceDetail/PlaceDetail';
+
+import { addPlace, deletePlace, selectPlace, deselectPlace } from './src/store/actions/index'
 
 
 const instructions = Platform.select({
@@ -23,93 +25,38 @@ const instructions = Platform.select({
 });
 
 // type Props = {};
-export default class App extends Component {
+class App extends Component { 
 
-  state = {
-    placeName : '',
-    places : [],
-    selectedPlace: null
-
-  }
-
-
-  placeNameChangedHandler = val => {
-     this.setState({
-       placeName: val 
-     });
-  };
-
-  placeSubmitHandler = () => {
-    if(this.state.placeName === "") {
+  placeAddedHandler = placeName => {
+    if(this.props.placeName === "") {
       return;
     }
-    this.setState(prevState => {
-      return {
-        places: prevState.places.concat({
-          key: Math.random(),
-          name: prevState.placeName,
-          image: {
-            uri: "https://us-east.manta.joyent.com/condenast/public/cnt-services/production/2016/01/14/5698079f78d099fc122488c6_Trunk-Bay-St-John-cr-alamy.jpg"
-          }
-        }),
-        placeName : ""
-      };
-    });
-  };
-
-  placeDeleteHandler = index => {
-    this.setState(prevState => {
-      return {
-        places: prevState.places.filter(place => {
-          return place.key !== index;
-        })
-      }
-    });
-  }
+    this.props.onAddPlace(placeName);
+  }; 
 
   placeSelectedHandler = key => {
-    this.setState(prevState => {
-      return {
-        selectedPlace: prevState.places.find((place) => {
-          return place.key === key;
-        })
-      }
-    })
+    this.props.onSelectPlace(key); 
   };
 
   placeDeletedHandler = () => {
-    this.setState(prevState => {
-      return {
-        places: prevState.places.filter(place => {
-          return place.key !== prevState.selectedPlace.key;
-        }),
-        selectedPlace: null
-      }
-    });
+    this.props.onDeletePlace()
   }
 
   modalClosedHandler= () => {
-    this.setState({
-      selectedPlace: null
-    });
+    this.props.onDeselectPlace();
   }
 
   render() {
-
     return (
       <View style={styles.container}>
         <PlaceDetail
-          selectedPlace ={this.state.selectedPlace}
+          selectedPlace ={this.props.selectedPlace}
           onItemDeleted={this.placeDeletedHandler}
           onModalClosed={this.modalClosedHandler}
         />
-        <InputItem 
-          placeName={this.state.placeName} 
-          placeNameChangedHandler={this.placeNameChangedHandler}
-          placeSubmitHandler={this.placeSubmitHandler}
-        />
+        <PlaceInput onPlaceAdded={this.placeAddedHandler} />
         <List 
-          places={this.state.places} 
+          places={this.props.places} 
           onItemSelected={this.placeSelectedHandler}
         />
       </View>
@@ -126,3 +73,21 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5FCFF',
   }
 });
+
+const mapStateToProps = state => {
+  return {
+    places: state.places.places,
+    selectedPlace: state.places.selectedPlace
+  };
+};
+
+const mapDispatchToProps = dispatch => {
+  return {
+    onAddPlace: (name) => dispatch(addPlace(name)),
+    onDeletePlace: () => dispatch(deletePlace()),
+    onSelectPlace: (key) => dispatch(selectPlace(key)),
+    onDeselectPlace: () => dispatch(deselectPlace())
+  };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(App)
