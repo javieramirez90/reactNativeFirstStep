@@ -3,8 +3,7 @@ import { StyleSheet, FlatList } from 'react-native';
 
 import ListItem from '../ListItem/ListItem'
 
-const List = props => {
-  
+const placeList = props => {
   
   return(
     <FlatList 
@@ -22,8 +21,7 @@ const List = props => {
   
 }
 
-
-export default List;
+export default placeList;
 
 const styles = StyleSheet.create({
   placesOutput: {
